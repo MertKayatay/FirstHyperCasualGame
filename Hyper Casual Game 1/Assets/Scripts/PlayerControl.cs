@@ -14,6 +14,10 @@ public class PlayerControl : MonoBehaviour
     public GameObject ridingCylinderPrefab;
     public List<RidingCylinder> cylinders;
 
+    private bool _spawningBridge;
+    public GameObject bridgePiecePrefab;
+    private BridgeSpawner _bridgeSpawner;
+    private float _creatingBridgeTimer;
    
     void Start()
     {
@@ -40,6 +44,28 @@ public class PlayerControl : MonoBehaviour
        
        Vector3 newPosition = new Vector3(newX, transform.position.y, transform.position.z + _currentrunningSpeed * Time.deltaTime); 
        transform.position = newPosition;
+
+       if (_spawningBridge)
+       {
+           _creatingBridgeTimer -= Time.deltaTime;
+           if(_creatingBridgeTimer < 0)
+           {
+               _creatingBridgeTimer = 0.03f;
+               IncrementCylinderVolume(-0.03f);
+               GameObject createdBridgePiece = Instantiate(bridgePiecePrefab);
+               Vector3 direction = _bridgeSpawner.EndReference.transform.position - _bridgeSpawner.StartReference.transform.position;
+               float distance = direction.magnitude;
+               direction = direction.normalized;
+               createdBridgePiece.transform.forward = direction;
+               float characterDistance = transform.position.z - _bridgeSpawner.StartReference.transform.position.z;
+               characterDistance = Mathf.Clamp(characterDistance, 0, distance);
+               Vector3 newPiecePosition = _bridgeSpawner.StartReference.transform.position + direction * characterDistance;
+               newPiecePosition.x = transform.position.x;
+               createdBridgePiece.transform.position = newPiecePosition;
+
+           }
+
+       }
        
     }
     
@@ -53,6 +79,14 @@ public class PlayerControl : MonoBehaviour
          
          Destroy(other.gameObject);
       }  
+      else if (other.tag == "SpawnBridge")
+      {
+          StartSpawningBridge(other.transform.parent.GetComponent<BridgeSpawner>());
+      }
+      else if (other.tag == "StoSpawnBridge")
+      {
+          StopSpawningBridge();
+      }
     }
     private void OnTriggerStay(Collider other) 
     {
@@ -94,6 +128,19 @@ public class PlayerControl : MonoBehaviour
         cylinders.Remove(cylinder);
         Destroy(cylinder.gameObject);
     }
+
+
+    public void StartSpawningBridge(BridgeSpawner spawner)
+    {
+     _bridgeSpawner = spawner;
+     _spawningBridge = true;
+    }
+    
+    public void StopSpawningBridge()
+    {
+        _spawningBridge = false;
+    }
+
 
 
 }

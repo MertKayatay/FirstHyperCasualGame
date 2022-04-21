@@ -6,6 +6,8 @@ TagManager:
   tags:
   - AddCylinder
   - trap
+  - SpawnBridge
+  - StopSpawnBridge
   layers:
   - Default
   - TransparentFX
